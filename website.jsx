@@ -2321,6 +2321,7 @@ const ComponentClass = ({defaultName, constructor, css, onConnect, onDisconnect,
     // improve attributes:
         // make all assigned CSS attributes gain !important
         // make innerHTML & friends not ovewrite stylesheets
+    // fix the CSS importantify hack
 
 window.ComponentClass = ComponentClass
 window.Component = ComponentClass({
