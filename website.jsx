@@ -15,6 +15,857 @@ document.body.innerHTML = `
     Hello World!
 `
 
+
+// TODO:
+    // standardize external styles
+    // standardize internal styles
+    // wrap in proxy object
+
+const hash = (object) => JSON.stringify(object).split("").reduce((hashCode, currentVal) => (hashCode = currentVal.charCodeAt(0) + (hashCode << 6) + (hashCode << 16) - hashCode), 0)
+
+const customElementStyleBandageSymbol = Symbol.for("customElementStyleBandage")
+class Custom extends HTMLElement {
+    constructor(...args) {
+        super()
+        
+        // 
+        // lock some attributes
+        // 
+        this.untouchables = []
+        Object.defineProperty(this, "setAttribute", {
+            value: (qualifiedName, value)=>{
+                if (!this.untouchables.includes(qualifiedName)) {
+                    super.setAttribute(qualifiedName, value)
+                }
+            },
+            writable: false
+        })
+        
+        // 
+        // lock external styles
+        // 
+        // if hasn't been setup yet, then add a style sheet
+        if (!window[customElementStyleBandageSymbol]) {
+            const styleElement = window.document.createElement("style")
+            const baselineAttributes = `
+                display: flex;
+                animation: unset !important;
+                background: unset !important;
+                border-block-color: unset !important;
+                border-block-end: unset !important;
+                border-block-start: unset !important;
+                border-block-style: unset !important;
+                border-block-width: unset !important;
+                border-block: unset !important;
+                border-bottom: unset !important;
+                border-color: unset !important;
+                border-image: unset !important;
+                border-inline-color: unset !important;
+                border-inline-end: unset !important;
+                border-inline-start: unset !important;
+                border-inline-style: unset !important;
+                border-inline-width: unset !important;
+                border-inline: unset !important;
+                border-left: unset !important;
+                border-radius: unset !important;
+                border-right: unset !important;
+                border-style: unset !important;
+                border-top: unset !important;
+                border-width: unset !important;
+                border: unset !important;
+                column-rule: unset !important;
+                columns: unset !important;
+                css-text: unset !important;
+                flex-flow: unset !important;
+                flex: unset !important;
+                font: unset !important;
+                gap: unset !important;
+                grid-area: unset !important;
+                grid-column: unset !important;
+                grid-gap: unset !important;
+                grid-row: unset !important;
+                grid-template: unset !important;
+                grid: unset !important;
+                inset-block: unset !important;
+                inset-inline: unset !important;
+                inset: unset !important;
+                list-style: unset !important;
+                margin-block: unset !important;
+                margin-inline: unset !important;
+                margin: unset !important;
+                marker: unset !important;
+                offset: unset !important;
+                outline: unset !important;
+                overscroll-behavior: unset !important;
+                padding-block: unset !important;
+                padding-inline: unset !important;
+                padding: unset !important;
+                place-content: unset !important;
+                place-items: unset !important;
+                place-self: unset !important;
+                scroll-margin-block: unset !important;
+                scroll-margin-inline: unset !important;
+                scroll-margin: unset !important;
+                scroll-padding-block: unset !important;
+                scroll-padding-inline: unset !important;
+                scroll-padding: unset !important;
+                text-emphasis: unset !important;
+                block-size: unset !important;
+                inline-size: unset !important;
+                length: unset !important;
+                transition: unset !important;
+                
+                -moz-animation: unset !important;
+                -moz-border-end: unset !important;
+                -moz-border-image: unset !important;
+                -moz-border-start: unset !important;
+                -moz-transition: unset !important;
+                -moz-animation-delay: unset !important;
+                -moz-animation-direction: unset !important;
+                -moz-animation-duration: unset !important;
+                -moz-animation-fill-mode: unset !important;
+                -moz-animation-iteration-count: unset !important;
+                -moz-animation-name: unset !important;
+                -moz-animation-play-state: unset !important;
+                -moz-animation-timing-function: unset !important;
+                -moz-appearance: unset !important;
+                -moz-backface-visibility: unset !important;
+                -moz-border-end-color: unset !important;
+                -moz-border-end-style: unset !important;
+                -moz-border-end-width: unset !important;
+                -moz-border-start-color: unset !important;
+                -moz-border-start-style: unset !important;
+                -moz-border-start-width: unset !important;
+                -moz-box-align: unset !important;
+                -moz-box-direction: unset !important;
+                -moz-box-flex: unset !important;
+                -moz-box-ordinal-group: unset !important;
+                -moz-box-orient: unset !important;
+                -moz-box-pack: unset !important;
+                -moz-box-sizing: unset !important;
+                -moz-float-edge: unset !important;
+                -moz-font-feature-settings: unset !important;
+                -moz-font-language-override: unset !important;
+                -moz-force-broken-image-icon: unset !important;
+                -moz-hyphens: unset !important;
+                -moz-image-region: unset !important;
+                -moz-margin-end: unset !important;
+                -moz-margin-start: unset !important;
+                -moz-orient: unset !important;
+                -moz-osx-font-smoothing: unset !important;
+                -moz-padding-end: unset !important;
+                -moz-padding-start: unset !important;
+                -moz-perspective-origin: unset !important;
+                -moz-perspective: unset !important;
+                -moz-tab-size: unset !important;
+                -moz-text-size-adjust: unset !important;
+                -moz-transform-origin: unset !important;
+                -moz-transform-style: unset !important;
+                -moz-transform: unset !important;
+                -moz-transition-delay: unset !important;
+                -moz-transition-duration: unset !important;
+                -moz-transition-property: unset !important;
+                -moz-transition-timing-function: unset !important;
+                -moz-user-focus: unset !important;
+                -moz-user-input: unset !important;
+                -moz-user-modify: unset !important;
+                -moz-user-select: unset !important;
+                -moz-window-dragging: unset !important;
+                
+                -webkit-mask-composite: unset !important;
+                -webkit-mask: unset !important;
+                -webkit-perspective-origin: unset !important;
+                -webkit-transform-origin: unset !important;
+                -webkit-animation: unset !important;
+                -webkit-border-image: unset !important;
+                -webkit-border-radius: unset !important;
+                -webkit-flex-flow: unset !important;
+                -webkit-flex: unset !important;
+                -webkit-text-stroke: unset !important;
+                -webkit-transition: unset !important;
+                -webkit-align-content: unset !important;
+                -webkit-align-items: unset !important;
+                -webkit-align-self: unset !important;
+                -webkit-animation: unset !important;
+                -webkit-animation-delay: unset !important;
+                -webkit-animation-direction: unset !important;
+                -webkit-animation-duration: unset !important;
+                -webkit-animation-fill-mode: unset !important;
+                -webkit-animation-iteration-count: unset !important;
+                -webkit-animation-name: unset !important;
+                -webkit-animation-play-state: unset !important;
+                -webkit-animation-timing-function: unset !important;
+                -webkit-app-region: unset !important;
+                -webkit-appearance: unset !important;
+                -webkit-backface-visibility: unset !important;
+                -webkit-background-clip: unset !important;
+                -webkit-background-origin: unset !important;
+                -webkit-background-size: unset !important;
+                -webkit-border-after: unset !important;
+                -webkit-border-after-color: unset !important;
+                -webkit-border-after-style: unset !important;
+                -webkit-border-after-width: unset !important;
+                -webkit-border-before: unset !important;
+                -webkit-border-before-color: unset !important;
+                -webkit-border-before-style: unset !important;
+                -webkit-border-before-width: unset !important;
+                -webkit-border-bottom-left-radius: unset !important;
+                -webkit-border-bottom-right-radius: unset !important;
+                -webkit-border-end: unset !important;
+                -webkit-border-end-color: unset !important;
+                -webkit-border-end-style: unset !important;
+                -webkit-border-end-width: unset !important;
+                -webkit-border-horizontal-spacing: unset !important;
+                -webkit-border-image: unset !important;
+                -webkit-border-radius: unset !important;
+                -webkit-border-start: unset !important;
+                -webkit-border-start-color: unset !important;
+                -webkit-border-start-style: unset !important;
+                -webkit-border-start-width: unset !important;
+                -webkit-border-top-left-radius: unset !important;
+                -webkit-border-top-right-radius: unset !important;
+                -webkit-border-vertical-spacing: unset !important;
+                -webkit-box-align: unset !important;
+                -webkit-box-decoration-break: unset !important;
+                -webkit-box-direction: unset !important;
+                -webkit-box-flex: unset !important;
+                -webkit-box-ordinal-group: unset !important;
+                -webkit-box-orient: unset !important;
+                -webkit-box-pack: unset !important;
+                -webkit-box-reflect: unset !important;
+                -webkit-box-shadow: unset !important;
+                -webkit-box-sizing: unset !important;
+                -webkit-clip-path: unset !important;
+                -webkit-column-break-after: unset !important;
+                -webkit-column-break-before: unset !important;
+                -webkit-column-break-inside: unset !important;
+                -webkit-column-count: unset !important;
+                -webkit-column-gap: unset !important;
+                -webkit-column-rule: unset !important;
+                -webkit-column-rule-color: unset !important;
+                -webkit-column-rule-style: unset !important;
+                -webkit-column-rule-width: unset !important;
+                -webkit-column-span: unset !important;
+                -webkit-column-width: unset !important;
+                -webkit-columns: unset !important;
+                -webkit-filter: unset !important;
+                -webkit-flex: unset !important;
+                -webkit-flex-basis: unset !important;
+                -webkit-flex-direction: unset !important;
+                -webkit-flex-flow: unset !important;
+                -webkit-flex-grow: unset !important;
+                -webkit-flex-shrink: unset !important;
+                -webkit-flex-wrap: unset !important;
+                -webkit-font-feature-settings: unset !important;
+                -webkit-font-smoothing: unset !important;
+                -webkit-highlight: unset !important;
+                -webkit-hyphenate-character: unset !important;
+                -webkit-justify-content: unset !important;
+                -webkit-line-break: unset !important;
+                -webkit-line-clamp: unset !important;
+                -webkit-locale: unset !important;
+                -webkit-logical-height: unset !important;
+                -webkit-logical-width: unset !important;
+                -webkit-margin-after: unset !important;
+                -webkit-margin-before: unset !important;
+                -webkit-margin-end: unset !important;
+                -webkit-margin-start: unset !important;
+                -webkit-mask-box-image: unset !important;
+                -webkit-mask-box-image-outset: unset !important;
+                -webkit-mask-box-image-repeat: unset !important;
+                -webkit-mask-box-image-slice: unset !important;
+                -webkit-mask-box-image-source: unset !important;
+                -webkit-mask-box-image-width: unset !important;
+                -webkit-mask-clip: unset !important;
+                -webkit-mask-composite: unset !important;
+                -webkit-mask-image: unset !important;
+                -webkit-mask-origin: unset !important;
+                -webkit-mask-position: unset !important;
+                -webkit-mask-position-x: unset !important;
+                -webkit-mask-position-y: unset !important;
+                -webkit-mask-repeat: unset !important;
+                -webkit-mask-size: unset !important;
+                -webkit-max-logical-height: unset !important;
+                -webkit-max-logical-width: unset !important;
+                -webkit-min-logical-height: unset !important;
+                -webkit-min-logical-width: unset !important;
+                -webkit-opacity: unset !important;
+                -webkit-order: unset !important;
+                -webkit-padding-after: unset !important;
+                -webkit-padding-before: unset !important;
+                -webkit-padding-end: unset !important;
+                -webkit-padding-start: unset !important;
+                -webkit-perspective: unset !important;
+                -webkit-perspective-origin: unset !important;
+                -webkit-print-color-adjust: unset !important;
+                -webkit-rtl-ordering: unset !important;
+                -webkit-ruby-position: unset !important;
+                -webkit-shape-image-threshold: unset !important;
+                -webkit-shape-margin: unset !important;
+                -webkit-shape-outside: unset !important;
+                -webkit-tap-highlight-color: unset !important;
+                -webkit-text-combine: unset !important;
+                -webkit-text-decorations-in-effect: unset !important;
+                -webkit-text-emphasis-color: unset !important;
+                -webkit-text-emphasis-position: unset !important;
+                -webkit-text-emphasis-style: unset !important;
+                -webkit-text-fill-color: unset !important;
+                -webkit-text-orientation: unset !important;
+                -webkit-text-security: unset !important;
+                -webkit-text-size-adjust: unset !important;
+                -webkit-text-stroke-color: unset !important;
+                -webkit-text-stroke-width: unset !important;
+                -webkit-transform: unset !important;
+                -webkit-transform-origin: unset !important;
+                -webkit-transform-style: unset !important;
+                -webkit-transition: unset !important;
+                -webkit-transition-delay: unset !important;
+                -webkit-transition-duration: unset !important;
+                -webkit-transition-property: unset !important;
+                -webkit-transition-timing-function: unset !important;
+                -webkit-user-drag: unset !important;
+                -webkit-user-modify: unset !important;
+                -webkit-user-select: unset !important;
+                -webkit-writing-mode: unset !important;
+                
+                accent-color: auto !important;
+                align-content: normal !important;
+                align-items: normal !important;
+                align-self: auto !important;
+                alignment-baseline: auto !important;
+                animation-delay: 0s !important;
+                animation-direction: normal !important;
+                animation-duration: 0s !important;
+                animation-fill-mode: none !important;
+                animation-iteration-count: 1 !important;
+                animation-name: none !important;
+                animation-play-state: running !important;
+                animation-timing-function: ease !important;
+                animation: none 0s ease 0s 1 normal none running !important;
+                app-region: none !important;
+                appearance: none !important;
+                aspect-ratio: auto !important;
+                backdrop-filter: none !important;
+                backface-visibility: visible !important;
+                background-attachment: scroll !important;
+                background-blend-mode: normal !important;
+                background-clip: border-box !important;
+                background-color: rgba(0, 0, 0, 0) !important;
+                background-image: none !important;
+                background-origin: padding-box !important;
+                background-position-x: 0% !important;
+                background-position-y: 0% !important;
+                background-position: 0% 0% !important;
+                background-repeat: repeat !important;
+                background-size: auto !important;
+                background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box !important;
+                baseline-shift: 0px !important;
+                block-size: auto !important;
+                border-block-color: rgb(0, 0, 0) !important;
+                border-block-end-color: rgb(0, 0, 0) !important;
+                border-block-end-style: none !important;
+                border-block-end-width: 0px !important;
+                border-block-end: 0px none rgb(0, 0, 0) !important;
+                border-block-start-color: rgb(0, 0, 0) !important;
+                border-block-start-style: none !important;
+                border-block-start-width: 0px !important;
+                border-block-start: 0px none rgb(0, 0, 0) !important;
+                border-block-style: none !important;
+                border-block-width: 0px !important;
+                border-block: 0px none rgb(0, 0, 0) !important;
+                border-bottom-color: rgb(0, 0, 0) !important;
+                border-bottom-left-radius: 0px !important;
+                border-bottom-right-radius: 0px !important;
+                border-bottom-style: none !important;
+                border-bottom-width: 0px !important;
+                border-bottom: 0px none rgb(0, 0, 0) !important;
+                border-collapse: separate !important;
+                border-color: rgb(0, 0, 0) !important;
+                border-end-end-radius: 0px !important;
+                border-end-start-radius: 0px !important;
+                border-image-outset: 0 !important;
+                border-image-repeat: stretch !important;
+                border-image-slice: 100% !important;
+                border-image-source: none !important;
+                border-image-width: 1 !important;
+                border-image: none !important;
+                border-inline-color: rgb(0, 0, 0) !important;
+                border-inline-end-color: rgb(0, 0, 0) !important;
+                border-inline-end-style: none !important;
+                border-inline-end-width: 0px !important;
+                border-inline-end: 0px none rgb(0, 0, 0) !important;
+                border-inline-start-color: rgb(0, 0, 0) !important;
+                border-inline-start-style: none !important;
+                border-inline-start-width: 0px !important;
+                border-inline-start: 0px none rgb(0, 0, 0) !important;
+                border-inline-style: none !important;
+                border-inline-width: 0px !important;
+                border-inline: 0px none rgb(0, 0, 0) !important;
+                border-left-color: rgb(0, 0, 0) !important;
+                border-left-style: none !important;
+                border-left-width: 0px !important;
+                border-left: 0px none rgb(0, 0, 0) !important;
+                border-radius: 0px !important;
+                border-right-color: rgb(0, 0, 0) !important;
+                border-right-style: none !important;
+                border-right-width: 0px !important;
+                border-right: 0px none rgb(0, 0, 0) !important;
+                border-spacing: 0px 0px !important;
+                border-start-end-radius: 0px !important;
+                border-start-start-radius: 0px !important;
+                border-style: none !important;
+                border-top-color: rgb(0, 0, 0) !important;
+                border-top-left-radius: 0px !important;
+                border-top-right-radius: 0px !important;
+                border-top-style: none !important;
+                border-top-width: 0px !important;
+                border-top: 0px none rgb(0, 0, 0) !important;
+                border-width: 0px !important;
+                border: 0px none rgb(0, 0, 0) !important;
+                bottom: auto !important;
+                box-decoration-break: slice !important;
+                box-shadow: none !important;
+                box-sizing: content-box !important;
+                break-after: auto !important;
+                break-before: auto !important;
+                break-inside: auto !important;
+                buffered-rendering: auto !important;
+                caption-side: top !important;
+                caret-color: rgb(0, 0, 0) !important;
+                clear: none !important;
+                clip-path: none !important;
+                clip-rule: nonzero !important;
+                clip: auto !important;
+                color-adjust: economy !important;
+                color-interpolation-filters: linearrgb !important;
+                color-interpolation: srgb !important;
+                color-rendering: auto !important;
+                color-scheme: normal !important;
+                color: rgb(0, 0, 0) !important;
+                column-count: auto !important;
+                column-fill: balance !important;
+                column-gap: normal !important;
+                column-rule-color: rgb(0, 0, 0) !important;
+                column-rule-style: none !important;
+                column-rule-width: 0px !important;
+                column-rule: 0px none rgb(0, 0, 0) !important;
+                column-span: none !important;
+                column-width: auto !important;
+                columns: auto auto !important;
+                contain-intrinsic-block-size: auto !important;
+                contain-intrinsic-height: auto !important;
+                contain-intrinsic-inline-size: auto !important;
+                contain-intrinsic-size: auto !important;
+                contain-intrinsic-width: auto !important;
+                contain: none !important;
+                content-visibility: visible !important;
+                content: normal !important;
+                counter-increment: none !important;
+                counter-reset: none !important;
+                counter-set: none !important;
+                css-float: none !important;
+                cursor: auto !important;
+                cx: 0px !important;
+                cy: 0px !important;
+                d: none !important;
+                direction: ltr !important;
+                dominant-baseline: auto !important;
+                empty-cells: show !important;
+                fill-opacity: 1 !important;
+                fill-rule: nonzero !important;
+                fill: rgb(0, 0, 0) !important;
+                filter: none !important;
+                flex-basis: auto !important;
+                flex-direction: row !important;
+                flex-flow: row nowrap !important;
+                flex-grow: 0 !important;
+                flex-shrink: 1 !important;
+                flex-wrap: nowrap !important;
+                flex: 0 1 auto !important;
+                float: none !important;
+                flood-color: rgb(0, 0, 0) !important;
+                flood-opacity: 1 !important;
+                font-family: sans-serif !important;
+                font-feature-settings: normal !important;
+                font-kerning: auto !important;
+                font-language-override: normal !important;
+                font-optical-sizing: auto !important;
+                font-size-adjust: none !important;
+                font-size: 16px !important;
+                font-stretch: 100% !important;
+                font-style: normal !important;
+                font-synthesis: weight style small-caps !important;
+                font-variant-alternates: normal !important;
+                font-variant-caps: normal !important;
+                font-variant-east-asian: normal !important;
+                font-variant-ligatures: normal !important;
+                font-variant-numeric: normal !important;
+                font-variant-position: normal !important;
+                font-variant: normal !important;
+                font-variation-settings: normal !important;
+                font-weight: 400 !important;
+                font: 16px sans-serif !important;
+                forced-color-adjust: auto !important;
+                gap: normal !important;
+                grid-area: auto / auto / auto / auto !important;
+                grid-auto-columns: auto !important;
+                grid-auto-flow: row !important;
+                grid-auto-rows: auto !important;
+                grid-column-end: auto !important;
+                grid-column-gap: normal !important;
+                grid-column-start: auto !important;
+                grid-column: auto / auto !important;
+                grid-gap: normal normal !important;
+                grid-row-end: auto !important;
+                grid-row-gap: normal !important;
+                grid-row-start: auto !important;
+                grid-row: auto / auto !important;
+                grid-template-areas: none !important;
+                grid-template-columns: none !important;
+                grid-template-rows: none !important;
+                grid-template: none / none / none !important;
+                grid: none / none / none / row / auto / auto !important;
+                height: auto !important;
+                height: auto !important;
+                hyphens: manual !important;
+                image-orientation: from-image !important;
+                image-rendering: auto !important;
+                ime-mode: auto !important;
+                inline-size: auto !important;
+                inset-block-end: auto !important;
+                inset-block-start: auto !important;
+                inset-block: auto !important;
+                inset-inline-end: auto !important;
+                inset-inline-start: auto !important;
+                inset-inline: auto !important;
+                inset: auto !important;
+                isolation: auto !important;
+                justify-content: normal !important;
+                justify-items: normal !important;
+                justify-self: auto !important;
+                left: auto !important;
+                letter-spacing: normal !important;
+                lighting-color: rgb(255, 255, 255) !important;
+                line-break: auto !important;
+                line-height: normal !important;
+                list-style-image: none !important;
+                list-style-position: outside !important;
+                list-style-type: disc !important;
+                list-style: outside none disc !important;
+                margin-block-end: 0px !important;
+                margin-block-start: 0px !important;
+                margin-block: 0px !important;
+                margin-bottom: 0px !important;
+                margin-inline-end: 0px !important;
+                margin-inline-start: 0px !important;
+                margin-inline: 0px !important;
+                margin-left: 0px !important;
+                margin-right: 0px !important;
+                margin-top: 0px !important;
+                margin: 0px !important;
+                marker-end: none !important;
+                marker-mid: none !important;
+                marker-start: none !important;
+                marker: none !important;
+                mask-clip: border-box !important;
+                mask-composite: add !important;
+                mask-image: none !important;
+                mask-mode: match-source !important;
+                mask-origin: border-box !important;
+                mask-position-x: 0% !important;
+                mask-position-y: 0% !important;
+                mask-position: 0% 0% !important;
+                mask-repeat: repeat !important;
+                mask-size: auto !important;
+                mask-type: luminance !important;
+                mask: none !important;
+                max-block-size: none !important;
+                max-height: none !important;
+                max-inline-size: none !important;
+                max-width: none !important;
+                min-block-size: 0px !important;
+                min-height: 0px !important;
+                min-inline-size: 0px !important;
+                min-width: 0px !important;
+                mix-blend-mode: normal !important;
+                object-fit: fill !important;
+                object-position: 50% 50% !important;
+                offset-anchor: auto !important;
+                offset-distance: 0px !important;
+                offset-path: none !important;
+                offset-rotate: auto 0deg !important;
+                offset-rotate: auto !important;
+                offset: none 0px auto 0deg !important;
+                opacity: 1 !important;
+                order: 0 !important;
+                orphans: 2 !important;
+                outline-color: rgb(0, 0, 0) !important;
+                outline-offset: 0px !important;
+                outline-style: none !important;
+                outline-width: 0px !important;
+                outline: rgb(0, 0, 0) none 0px !important;
+                overflow-anchor: auto !important;
+                overflow-block: visible !important;
+                overflow-clip-margin: 0px !important;
+                overflow-inline: visible !important;
+                overflow-wrap: normal !important;
+                overflow-x: visible !important;
+                overflow-y: visible !important;
+                overflow: visible !important;
+                overscroll-behavior-block: auto !important;
+                overscroll-behavior-inline: auto !important;
+                overscroll-behavior-x: auto !important;
+                overscroll-behavior-y: auto !important;
+                overscroll-behavior: auto !important;
+                padding-block-end: 0px !important;
+                padding-block-start: 0px !important;
+                padding-block: 0px !important;
+                padding-bottom: 0px !important;
+                padding-inline-end: 0px !important;
+                padding-inline-start: 0px !important;
+                padding-inline: 0px !important;
+                padding-left: 0px !important;
+                padding-right: 0px !important;
+                padding-top: 0px !important;
+                padding: 0px !important;
+                page-break-after: auto !important;
+                page-break-before: auto !important;
+                page-break-inside: auto !important;
+                page: auto !important;
+                paint-order: normal !important;
+                parent-rule: null !important;
+                perspective-origin: 50% 50% !important;
+                perspective-origin: 50% 50% !important;
+                perspective: none !important;
+                place-content: normal !important;
+                place-items: normal !important;
+                place-self: auto !important;
+                pointer-events: auto !important;
+                position: static !important;
+                quotes: auto !important;
+                r: 0px !important;
+                resize: none !important;
+                right: auto !important;
+                rotate: none !important;
+                row-gap: normal !important;
+                ruby-align: space-around !important;
+                ruby-position: alternate !important;
+                ruby-position: over !important;
+                rx: auto !important;
+                ry: auto !important;
+                scale: none !important;
+                scroll-behavior: auto !important;
+                scroll-margin-block-end: 0px !important;
+                scroll-margin-block-start: 0px !important;
+                scroll-margin-block: 0px !important;
+                scroll-margin-bottom: 0px !important;
+                scroll-margin-inline-end: 0px !important;
+                scroll-margin-inline-start: 0px !important;
+                scroll-margin-inline: 0px !important;
+                scroll-margin-left: 0px !important;
+                scroll-margin-right: 0px !important;
+                scroll-margin-top: 0px !important;
+                scroll-margin: 0px !important;
+                scroll-padding-block-end: auto !important;
+                scroll-padding-block-start: auto !important;
+                scroll-padding-block: auto !important;
+                scroll-padding-bottom: auto !important;
+                scroll-padding-inline-end: auto !important;
+                scroll-padding-inline-start: auto !important;
+                scroll-padding-inline: auto !important;
+                scroll-padding-left: auto !important;
+                scroll-padding-right: auto !important;
+                scroll-padding-top: auto !important;
+                scroll-padding: auto !important;
+                scroll-snap-align: none !important;
+                scroll-snap-stop: normal !important;
+                scroll-snap-type: none !important;
+                scrollbar-color: auto !important;
+                scrollbar-gutter: auto !important;
+                scrollbar-width: auto !important;
+                shape-image-threshold: 0 !important;
+                shape-margin: 0px !important;
+                shape-outside: none !important;
+                shape-rendering: auto !important;
+                speak: normal !important;
+                stop-color: rgb(0, 0, 0) !important;
+                stop-opacity: 1 !important;
+                stroke-dasharray: none !important;
+                stroke-dashoffset: 0px !important;
+                stroke-linecap: butt !important;
+                stroke-linejoin: miter !important;
+                stroke-miterlimit: 4 !important;
+                stroke-opacity: 1 !important;
+                stroke-width: 1px !important;
+                stroke: none !important;
+                tab-size: 8 !important;
+                table-layout: auto !important;
+                text-align-last: auto !important;
+                text-align: start !important;
+                text-anchor: start !important;
+                text-combine-upright: none !important;
+                text-decoration-color: rgb(0, 0, 0) !important;
+                text-decoration-line: none !important;
+                text-decoration-skip-ink: auto !important;
+                text-decoration-style: solid !important;
+                text-decoration-thickness: auto !important;
+                text-decoration: none solid rgb(0, 0, 0) !important;
+                text-decoration: rgb(0, 0, 0) !important;
+                text-emphasis-color: rgb(0, 0, 0) !important;
+                text-emphasis-position: over right !important;
+                text-emphasis-style: none !important;
+                text-indent: 0px !important;
+                text-justify: auto !important;
+                text-orientation: mixed !important;
+                text-overflow: clip !important;
+                text-rendering: auto !important;
+                text-shadow: none !important;
+                text-size-adjust: auto !important;
+                text-transform: none !important;
+                text-underline-offset: auto !important;
+                text-underline-position: auto !important;
+                top: auto !important;
+                touch-action: auto !important;
+                transform-box: border-box !important;
+                transform-box: view-box !important;
+                transform-origin: 50% 50% !important;
+                transform-origin: 50% 50% !important;
+                transform-style: flat !important;
+                transform: none !important;
+                transition-delay: 0s !important;
+                transition-duration: 0s !important;
+                transition-property: all !important;
+                transition-timing-function: ease !important;
+                transition: all 0s ease 0s !important;
+                translate: none !important;
+                unicode-bidi: isolate !important;
+                unicode-bidi: normal !important;
+                user-select: auto !important;
+                vector-effect: none !important;
+                vertical-align: baseline !important;
+                visibility: visible !important;
+                white-space: normal !important;
+                widows: 2 !important;
+                width: auto !important;
+                will-change: auto !important;
+                word-break: normal !important;
+                word-spacing: 0px !important;
+                word-wrap: normal !important;
+                writing-mode: horizontal-tb !important;
+                x: 0px !important;
+                y: 0px !important;
+                z-index: auto !important;
+                zoom: 1 !important;
+            `
+            window[customElementStyleBandageSymbol] = hash(baselineAttributes)
+            // add this as a CSS id rule
+            styleElement.innerHTML = `#${window[customElementStyleBandageSymbol]} { ${baselineAttributes} }`
+            window.document.head.appendChild(styleElement)
+        }
+        this.untouchables.push("id")
+        this.setAttribute("id", window[customElementStyleBandageSymbol])
+        Object.defineProperty(this, "id", {
+            value: null,
+            writable: false
+        })
+        
+        // 
+        // baseline internal styles
+        // 
+        let shadow = this.attachShadow({mode: 'open'})
+        const shadowRoot =  shadow
+        shadowRoot.innerHTML=`
+            <div style="display: none;">
+                <link rel="stylesheet" href="https://unpkg.com/css-baseline@1.3.0/css/3.css">
+            </div>
+        `
+        // use div as a container for all the style elements
+        this.styleContainer = shadowRoot.firstElementChild
+        this.styleContainer.appendChild(baselineStyleElement.cloneNode(true))
+        this.styleContainer.appendChild(componentStyleElement.cloneNode(true))
+        // mixin many of the shadowRoot proprties
+        Object.defineProperties(this, {
+            innerHTML:                { get(){ return shadowRoot.innerHTML                }, set(value){return shadowRoot.innerHTML                = value } },
+            getInnerHTML:             { get(){ return shadowRoot.getInnerHTML             }, set(value){return shadowRoot.getInnerHTML             = value } },
+            children:                 { get(){ return shadowRoot.children                 }, set(value){return shadowRoot.children                 = value } },
+            append:                   { get(){ return shadowRoot.append                   }, set(value){return shadowRoot.append                   = value } },
+            getElementById:           { get(){ return shadowRoot.getElementById           }, set(value){return shadowRoot.getElementById           = value } },
+            prepend:                  { get(){ return shadowRoot.prepend                  }, set(value){return shadowRoot.prepend                  = value } },
+            querySelector:            { get(){ return shadowRoot.querySelector            }, set(value){return shadowRoot.querySelector            = value } },
+            querySelectorAll:         { get(){ return shadowRoot.querySelectorAll         }, set(value){return shadowRoot.querySelectorAll         = value } },
+            replaceChildren:          { get(){ return shadowRoot.replaceChildren          }, set(value){return shadowRoot.replaceChildren          = value } },
+            hasChildNodes:            { get(){ return shadowRoot.hasChildNodes            }, set(value){return shadowRoot.hasChildNodes            = value } },
+            insertBefore:             { get(){ return shadowRoot.insertBefore             }, set(value){return shadowRoot.insertBefore             = value } },
+            removeChild:              { get(){ return shadowRoot.removeChild              }, set(value){return shadowRoot.removeChild              = value } },
+            replaceChild:             { get(){ return shadowRoot.replaceChild             }, set(value){return shadowRoot.replaceChild             = value } },
+            childNodes:               { get(){ return shadowRoot.childNodes               }, set(value){return shadowRoot.childNodes               = value } },
+            firstChild:               { get(){ return shadowRoot.firstChild               }, set(value){return shadowRoot.firstChild               = value } },
+            lastChild:                { get(){ return shadowRoot.lastChild                }, set(value){return shadowRoot.lastChild                = value } },
+            nodeValue:                { get(){ return shadowRoot.nodeValue                }, set(value){return shadowRoot.nodeValue                = value } },
+            textContent:              { get(){ return shadowRoot.textContent              }, set(value){return shadowRoot.textContent              = value } },
+            appendChild:              { get(){ return shadowRoot.appendChild              }, set(value){return shadowRoot.appendChild              = value } },
+            cloneNode:                { get(){ return shadowRoot.cloneNode                }, set(value){return shadowRoot.cloneNode                = value } },
+            childElementCount:        { get(){ return shadowRoot.childElementCount        }, set(value){return shadowRoot.childElementCount        = value } },
+            contains:                 { get(){ return shadowRoot.contains                 }, set(value){return shadowRoot.contains                 = value } },
+            styleSheets:              { get(){ return shadowRoot.styleSheets              }, set(value){return shadowRoot.styleSheets              = value } },
+            delegatesFocus:           { get(){ return shadowRoot.delegatesFocus           }, set(value){return shadowRoot.delegatesFocus           = value } },
+            slotAssignment:           { get(){ return shadowRoot.slotAssignment           }, set(value){return shadowRoot.slotAssignment           = value } },
+            activeElement:            { get(){ return shadowRoot.activeElement            }, set(value){return shadowRoot.activeElement            = value } },
+            pointerLockElement:       { get(){ return shadowRoot.pointerLockElement       }, set(value){return shadowRoot.pointerLockElement       = value } },
+            fullscreenElement:        { get(){ return shadowRoot.fullscreenElement        }, set(value){return shadowRoot.fullscreenElement        = value } },
+            adoptedStyleSheets:       { get(){ return shadowRoot.adoptedStyleSheets       }, set(value){return shadowRoot.adoptedStyleSheets       = value } },
+            elementFromPoint:         { get(){ return shadowRoot.elementFromPoint         }, set(value){return shadowRoot.elementFromPoint         = value } },
+            elementsFromPoint:        { get(){ return shadowRoot.elementsFromPoint        }, set(value){return shadowRoot.elementsFromPoint        = value } },
+            getSelection:             { get(){ return shadowRoot.getSelection             }, set(value){return shadowRoot.getSelection             = value } },
+            pictureInPictureElement:  { get(){ return shadowRoot.pictureInPictureElement  }, set(value){return shadowRoot.pictureInPictureElement  = value } },
+            getAnimations:            { get(){ return shadowRoot.getAnimations            }, set(value){return shadowRoot.getAnimations            = value } },
+            firstElementChild:        { get(){ return shadowRoot.firstElementChild        }, set(value){return shadowRoot.firstElementChild        = value } },
+            lastElementChild:         { get(){ return shadowRoot.lastElementChild         }, set(value){return shadowRoot.lastElementChild         = value } },
+            nodeType:                 { get(){ return shadowRoot.nodeType                 }, set(value){return shadowRoot.nodeType                 = value } },
+            nodeName:                 { get(){ return shadowRoot.nodeName                 }, set(value){return shadowRoot.nodeName                 = value } },
+            baseURI:                  { get(){ return shadowRoot.baseURI                  }, set(value){return shadowRoot.baseURI                  = value } },
+            isConnected:              { get(){ return shadowRoot.isConnected              }, set(value){return shadowRoot.isConnected              = value } },
+            ownerDocument:            { get(){ return shadowRoot.ownerDocument            }, set(value){return shadowRoot.ownerDocument            = value } },
+            getRootNode:              { get(){ return shadowRoot.getRootNode              }, set(value){return shadowRoot.getRootNode              = value } },
+            isDefaultNamespace:       { get(){ return shadowRoot.isDefaultNamespace       }, set(value){return shadowRoot.isDefaultNamespace       = value } },
+            isEqualNode:              { get(){ return shadowRoot.isEqualNode              }, set(value){return shadowRoot.isEqualNode              = value } },
+            isSameNode:               { get(){ return shadowRoot.isSameNode               }, set(value){return shadowRoot.isSameNode               = value } },
+            lookupNamespaceURI:       { get(){ return shadowRoot.lookupNamespaceURI       }, set(value){return shadowRoot.lookupNamespaceURI       = value } },
+            lookupPrefix:             { get(){ return shadowRoot.lookupPrefix             }, set(value){return shadowRoot.lookupPrefix             = value } },
+            normalize:                { get(){ return shadowRoot.normalize                }, set(value){return shadowRoot.normalize                = value } },
+        })
+        this.connectedCallback = onConnect
+        this.disconnectedCallback = onDisconnect
+        this.adoptedCallback = advanced.adoptedCallback
+        setTimeout(()=>{
+            // make an importantified version of the css
+            this.setAttribute("style", baselineStylesString+cssImportantifyString(attributes.style||""))
+            // TODO make a method for converting object-style to CSS string
+            // TODO: other attributes like classes and children will be treated as special, but right now this just copies all of them
+            for (const [key, value] of Object.entries(attributes)) {
+                if (key == 'style') {
+                    continue
+                }
+                this.setAttribute(key, value)
+            }
+            constructor.apply(this, ...args)
+        })
+        
+        // lock these
+        Object.freeze(this.untouchables)
+    }
+    static get observedAttributes() {
+        return []
+    }
+}
+
+
+// 
+// 
+// old
+// 
+// 
+
 const cssImportantifyString = (string)=>{
     // FIXME, this replace is hacky! it could cause a problem with URL's and other quoted items like ::before's or attribute patterns inside of css
     //        if strings were removed and reinserted, it would probably be bulletproof though
