@@ -35,6 +35,7 @@
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(Node.prototype)
 Object.defineProperties(Node.prototype, {
+    cloneNode: { value: wrapMethodConverter(Node.prototype.cloneNode), },
     childNodes: { get: wrapGetterConverter(runningPropertyDefinitions.childNodes.get), },
     firstChild: { get: wrapGetterConverter(runningPropertyDefinitions.firstChild.get), },
     lastChild: { get: wrapGetterConverter(runningPropertyDefinitions.lastChild.get), },
@@ -56,10 +57,14 @@ Object.defineProperties(Node.prototype, {
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(Element.prototype)
 Object.defineProperties(Element.prototype, {
+    children: { get: wrapGetterConverter(runningPropertyDefinitions.children.get), },
+    getElementsByClassName: { value: wrapMethodConverter(Element.prototype.getElementsByClassName), },
+    getElementsByTagName: { value: wrapMethodConverter(Element.prototype.getElementsByTagName), },
+    getElementsByTagNameNS: { value: wrapMethodConverter(Element.prototype.getElementsByTagNameNS), },
+    querySelectorAll: { value: wrapMethodConverter(Element.prototype.querySelectorAll), },
     after: { value: wrapMethodConverter(Element.prototype.after), },
     append: { value: wrapMethodConverter(Element.prototype.append), },
     before: { value: wrapMethodConverter(Element.prototype.before), },
-    children: { get: wrapGetterConverter(runningPropertyDefinitions.children.get), },
     closest: { value: wrapMethodConverter(Element.prototype.closest), },
     getElementsByClassName: { value: wrapMethodConverter(Element.prototype.getElementsByClassName), },
     getElementsByTagName: { value: wrapMethodConverter(Element.prototype.getElementsByTagName), },
@@ -73,7 +78,6 @@ Object.defineProperties(Element.prototype, {
     prepend: { value: wrapMethodConverter(Element.prototype.prepend), },
     previousElementSibling: { get: wrapGetterConverter(runningPropertyDefinitions.previousElementSibling.get), },
     querySelector: { value: wrapMethodConverter(Element.prototype.querySelector), },
-    querySelectorAll: { value: wrapMethodConverter(Element.prototype.querySelectorAll), },
     remove: { value: wrapMethodConverter(Element.prototype.remove), },
     replaceChildren: { value: wrapMethodConverter(Element.prototype.replaceChildren), },
     replaceWith: { value: wrapMethodConverter(Element.prototype.replaceWith), },
@@ -83,15 +87,20 @@ Object.defineProperties(Element.prototype, {
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(Document.prototype)
 Object.defineProperties(Document.prototype, {
-    append: { value: wrapMethodConverter(Document.prototype.append), },
     children: { get: wrapGetterConverter(runningPropertyDefinitions.children.get), },
+    getElementsByClassName: { value: wrapMethodConverter(Document.prototype.getElementsByClassName), },
+    getElementsByTagName: { value: wrapMethodConverter(Document.prototype.getElementsByTagName), },
+    getElementsByTagNameNS: { value: wrapMethodConverter(Document.prototype.getElementsByTagNameNS), },
+    getElementsByName: { value: wrapMethodConverter(Document.prototype.getElementsByName), },
+    querySelectorAll: { value: wrapMethodConverter(Document.prototype.querySelectorAll), },
+    elementsFromPoint: { value: wrapMethodConverter(Document.prototype.elementsFromPoint), },
+    append: { value: wrapMethodConverter(Document.prototype.append), },
     getElementsByClassName: { value: wrapMethodConverter(Document.prototype.getElementsByClassName), },
     getElementsByTagName: { value: wrapMethodConverter(Document.prototype.getElementsByTagName), },
     getElementsByTagNameNS: { value: wrapMethodConverter(Document.prototype.getElementsByTagNameNS), },
     lastElementChild: { get: wrapGetterConverter(runningPropertyDefinitions.lastElementChild.get), },
     prepend: { value: wrapMethodConverter(Document.prototype.prepend), },
     querySelector: { value: wrapMethodConverter(Document.prototype.querySelector), },
-    querySelectorAll: { value: wrapMethodConverter(Document.prototype.querySelectorAll), },
     replaceChildren: { value: wrapMethodConverter(Document.prototype.replaceChildren), },
     documentElement: { get: wrapGetterConverter(runningPropertyDefinitions.documentElement.get), },
     body: { get: wrapGetterConverter(runningPropertyDefinitions.body.get), },
@@ -107,7 +116,6 @@ Object.defineProperties(Document.prototype, {
     fullscreenElement: { get: wrapGetterConverter(runningPropertyDefinitions.fullscreenElement.get), },
     adoptNode: { value: wrapMethodConverter(Document.prototype.adoptNode), },
     elementFromPoint: { value: wrapMethodConverter(Document.prototype.elementFromPoint), },
-    elementsFromPoint: { value: wrapMethodConverter(Document.prototype.elementsFromPoint), },
     getElementById: { value: wrapMethodConverter(Document.prototype.getElementById), },
     getElementsByName: { value: wrapMethodConverter(Document.prototype.getElementsByName), },
     getSelection: { value: wrapMethodConverter(Document.prototype.getSelection), },
@@ -122,8 +130,8 @@ Object.defineProperties(HTMLCollection.prototype, {
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLButtonElement.prototype)
 Object.defineProperties(HTMLButtonElement.prototype, {
-    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
     labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLDataListElement.prototype)
@@ -161,8 +169,8 @@ Object.defineProperties(HTMLIFrameElement.prototype, {
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLInputElement.prototype)
 Object.defineProperties(HTMLInputElement.prototype, {
-    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
     labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLLabelElement.prototype)
@@ -200,8 +208,8 @@ Object.defineProperties(HTMLOptionsCollection.prototype, {
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLOutputElement.prototype)
 Object.defineProperties(HTMLOutputElement.prototype, {
-    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
     labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLProgressElement.prototype)
@@ -211,22 +219,22 @@ Object.defineProperties(HTMLProgressElement.prototype, {
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLSelectElement.prototype)
 Object.defineProperties(HTMLSelectElement.prototype, {
+    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+    options: { get: wrapGetterConverter(runningPropertyDefinitions.options.get), },
     add: { value: wrapMethodConverter(HTMLSelectElement.prototype.add), },
     remove: { value: wrapMethodConverter(HTMLSelectElement.prototype.remove), },
     selectedIndex: { get: wrapGetterConverter(runningPropertyDefinitions.selectedIndex.get), },
     selectedOptions: { get: wrapGetterConverter(runningPropertyDefinitions.selectedOptions.get), },
     form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
-    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
-    options: { get: wrapGetterConverter(runningPropertyDefinitions.options.get), },
     item: { value: wrapMethodConverter(HTMLSelectElement.prototype.item), },
     namedItem: { value: wrapMethodConverter(HTMLSelectElement.prototype.namedItem), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLTableElement.prototype)
 Object.defineProperties(HTMLTableElement.prototype, {
-    insertRow: { value: wrapMethodConverter(HTMLTableElement.prototype.insertRow), },
     rows: { get: wrapGetterConverter(runningPropertyDefinitions.rows.get), },
     tBodies: { get: wrapGetterConverter(runningPropertyDefinitions.tBodies.get), },
+    insertRow: { value: wrapMethodConverter(HTMLTableElement.prototype.insertRow), },
     tFoot: { get: wrapGetterConverter(runningPropertyDefinitions.tFoot.get), },
     tHead: { get: wrapGetterConverter(runningPropertyDefinitions.tHead.get), },
     caption: { get: wrapGetterConverter(runningPropertyDefinitions.caption.get), },
@@ -234,14 +242,14 @@ Object.defineProperties(HTMLTableElement.prototype, {
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLTableRowElement.prototype)
 Object.defineProperties(HTMLTableRowElement.prototype, {
-    insertCell: { value: wrapMethodConverter(HTMLTableRowElement.prototype.insertCell), },
     cells: { get: wrapGetterConverter(runningPropertyDefinitions.cells.get), },
+    insertCell: { value: wrapMethodConverter(HTMLTableRowElement.prototype.insertCell), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLTableSectionElement.prototype)
 Object.defineProperties(HTMLTableSectionElement.prototype, {
-    insertRow: { value: wrapMethodConverter(HTMLTableSectionElement.prototype.insertRow), },
     rows: { get: wrapGetterConverter(runningPropertyDefinitions.rows.get), },
+    insertRow: { value: wrapMethodConverter(HTMLTableSectionElement.prototype.insertRow), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLTemplateElement.prototype)

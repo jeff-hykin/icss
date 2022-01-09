@@ -4,28 +4,26 @@ var specialCase = [
     NodeList, // manually patched because of complicated methods
 ]
 var classesToChange = [ EventTarget, Node, RadioNodeList, Element, Document, HTMLElement, HTMLDocument, HTMLCollection, HTMLAnchorElement, HTMLAreaElement, HTMLAudioElement, HTMLBRElement, HTMLBaseElement, HTMLBodyElement, HTMLButtonElement, HTMLCanvasElement, HTMLDListElement, HTMLDataElement, HTMLDataListElement, HTMLDialogElement, HTMLDivElement, HTMLEmbedElement, HTMLFieldSetElement, HTMLFormControlsCollection, HTMLFormElement, HTMLFrameSetElement, HTMLHRElement, HTMLHeadElement, HTMLHeadingElement, HTMLHtmlElement, HTMLIFrameElement, HTMLImageElement, HTMLInputElement, HTMLLIElement, HTMLLabelElement, HTMLLegendElement, HTMLLinkElement, HTMLMapElement, HTMLMediaElement, HTMLMetaElement, HTMLMeterElement, HTMLModElement, HTMLOListElement, HTMLObjectElement, HTMLOptGroupElement, HTMLOptionElement, HTMLOptionsCollection, HTMLOutputElement, HTMLParagraphElement, HTMLParamElement, HTMLPictureElement, HTMLPreElement, HTMLProgressElement, HTMLQuoteElement, HTMLScriptElement, HTMLSelectElement, HTMLSourceElement, HTMLSpanElement, HTMLStyleElement, HTMLTableCaptionElement, HTMLTableCellElement, HTMLTableColElement, HTMLTableElement, HTMLTableRowElement, HTMLTableSectionElement, HTMLTemplateElement, HTMLTimeElement, HTMLTitleElement, HTMLTrackElement, HTMLUListElement, HTMLUnknownElement, HTMLVideoElement, ]
-var propertiesReturningLists = [
+var propertiesReturningLists = [ // TODO: in the future use this list to optimize the wrapper a bit more
     "childNodes",
     "children",
     "getElementsByClassName",
     "getElementsByTagName",
     "getElementsByTagNameNS",
+    "getElementsByName",
     "querySelectorAll",
     "elementsFromPoint", // the only one that returns an array
-    "getElementsByClassName",
-    "getElementsByTagName",
-    "getElementsByTagNameNS",
-    "getElementsByName",
     "labels",
     "options",
     "elements",
+    "cells",
     "rows",
     "tBodies",
 ]
 var propertiesToWrap = [
-    // "cloneNode", <--special case
-
-    "childNodes",
+    // "cloneNode",  // <--special case
+    
+    ...propertiesReturningLists,
     "firstChild",
     "lastChild",
     "nextSibling",
@@ -47,9 +45,7 @@ var propertiesToWrap = [
     "after",
     "append",
     "before",
-    "children",
     "closest",
-    "elements",
     "getElementsByClassName",
     "getElementsByTagName",
     "getElementsByTagNameNS",
@@ -65,23 +61,17 @@ var propertiesToWrap = [
     "prepend",
     "previousElementSibling",
     "querySelector",
-    "querySelectorAll",
     "remove",
     "replaceChildren",
     "replaceWith",
-    "rows", // HTMLTableElement.rows and HTMLTableSectionElement.rows is a HTMLCollection, but HTMLTextAreaElement.rows is just a number
     "selectedIndex",
     "selectedOptions",
     "shadowRoot",
-    "tBodies",
     "tFoot",
     "tHead",
     "caption",
     "form",
     "menu",
-    "labels",
-    "options",
-    "cells",
     "item",
     "namedItem",
 
@@ -99,7 +89,6 @@ var propertiesToWrap = [
     "fullscreenElement",
     "adoptNode",
     "elementFromPoint",
-    "elementsFromPoint",
     "getElementById",
     "getElementsByName",
     "getSelection",
