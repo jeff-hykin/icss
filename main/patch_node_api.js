@@ -1,41 +1,42 @@
 
-    const proxySymbol = Symbol.for('Proxy')
-    const elementSymbol = Symbol.for("element")
-    const proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
-    const convertList = (listObj) => new Proxy(listObj, {
-        get(original, key) {
-            if (key == proxySymbol) {return true}
-            return maybeConvert(original[key])
-        },
-        set(original, key, value) {
-            if (key == proxySymbol) {return}
-            return original[key] = maybeConvert(value)
-        },
-    })
-    const maybeConvert = (node)=> {
-            if (node instanceof Object) {
-                if (node[elementSymbol]) {
-                    return node[elementSymbol]
-                }
-                if (node[proxyCounterpartSymbol]) {
-                    return node[proxyCounterpartSymbol]
-                }
-                if (node.length!=null) {
-                    return convertList(node)
-                }
-            }
-            return node
-        }
-    const wrapMethodConverter = (original) => function (   ...args) { return maybeConvert(original.apply(this, args.map(maybeConvert)    )) }
-    const wrapGetterConverter = (original) => function (key       ) { return maybeConvert(original.apply(this, [key                     ])) }
-    const wrapSetterConverter = (original) => function (key, value) { return              original.apply(this, [key, maybeConvert(value)])  }
+const proxySymbol = Symbol.for('Proxy')
+const elementSymbol = Symbol.for("element")
+const proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
+const onCloneNodeSymbol = Symbol.for("onCloneNode")
 
-    let runningPropertyDefinitions
+const convertList = (listObj) => new Proxy(listObj, {
+    get(original, key) {
+        if (key == proxySymbol) {return true}
+        return maybeConvert(original[key])
+    },
+    set(original, key, value) {
+        if (key == proxySymbol) {return}
+        return original[key] = maybeConvert(value)
+    },
+})
+const maybeConvert = (node)=> {
+        if (node instanceof Object) {
+            if (node[elementSymbol]) {
+                return node[elementSymbol]
+            }
+            if (node[proxyCounterpartSymbol]) {
+                return node[proxyCounterpartSymbol]
+            }
+            if (node.length!=null) {
+                return convertList(node)
+            }
+        }
+        return node
+    }
+const wrapMethodConverter = (original) => function (   ...args) { return maybeConvert(original.apply(this, args.map(maybeConvert)    )) }
+const wrapGetterConverter = (original) => function (key       ) { return maybeConvert(original.apply(this, [key                     ])) }
+const wrapSetterConverter = (original) => function (key, value) { return              original.apply(this, [key, maybeConvert(value)])  }
+
+let runningPropertyDefinitions
 
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(Node.prototype)
 Object.defineProperties(Node.prototype, {
-    cloneNode: { value: wrapMethodConverter(Node.prototype.cloneNode), },
     childNodes: { get: wrapGetterConverter(runningPropertyDefinitions.childNodes.get), },
     firstChild: { get: wrapGetterConverter(runningPropertyDefinitions.firstChild.get), },
     lastChild: { get: wrapGetterConverter(runningPropertyDefinitions.lastChild.get), },
@@ -256,6 +257,16 @@ runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLTemplateElemen
 Object.defineProperties(HTMLTemplateElement.prototype, {
     shadowRoot: { get: wrapGetterConverter(runningPropertyDefinitions.shadowRoot.get), },
 })
+
+// manually define what happens with cloneNode
+const originalCloneNode = Node.prototype.cloneNode
+Node.prototype.cloneNode = function(deep) {
+    const clonedNode = originalCloneNode.call(this, deep)
+    const counterpart = this[proxyCounterpartSymbol]
+    if (counterpart[onCloneNodeSymbol] instanceof Function) {
+        return counterpart[onCloneNodeSymbol](clonedNode, deep)
+    }
+}
 
 // manually patch NodeList cause it's special
 const [ nodeListEntriesFunction, nodeListForEachFunction, nodeListValuesFunction ] = [ NodeList.prototype.entries, NodeList.prototype.forEach, NodeList.prototype.values ]
