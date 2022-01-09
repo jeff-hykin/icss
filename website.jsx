@@ -1887,27 +1887,8 @@ const thisProxySymbol = Symbol('customObject')
 const originalHasInstance = Custom.prototype[Symbol.hasInstance]
 Custom.prototype[Symbol.hasInstance] = (item, ...args)=>(item instanceof Object && item[thisProxySymbol])||originalHasInstance(item, ...args)
 
-const CustomProxy = new Proxy(Custom, {
-    defineProperty: Reflect.defineProperty,
-    getPrototypeOf: Reflect.getPrototypeOf,
-    // Object.keys
-    ownKeys(original) { return Object.keys(original) },
-    // function call (original value needs to be a function)
-    apply(original, context, ...args) { return new original(...args) },
-    // new operator (original value needs to be a class)
-    construct(original, ...args) { return new original(...args)  },
-    get(original, key, ...args) {
-        console.debug(`getting key:`,key)
-        if (key == proxySymbol||key == thisProxySymbol) {return true}
-        return Reflect.get(original, key, ...args)
-    },
-    set(original, key, ...args) {
-        if (key == proxySymbol||key == thisProxySymbol) {return}
-        return Reflect.set(original, key, ...args)
-    },
-})
-
 const elementSymbol = Symbol.for("element")
+const proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
 const createElement = ({ style, onConnect, onDisconnect, onAdopted, children, })=>{
     const element = new Custom({onConnect, onDisconnect, onAdopted, children})
     const elementProxy = new Proxy(element, {
@@ -1928,6 +1909,47 @@ const createElement = ({ style, onConnect, onDisconnect, onAdopted, children, })
     })
     return elementProxy
 }
+
+
+// expand the HTML element ability
+Object.defineProperties(window.Element.prototype, {
+    // setting styles through a string
+    css: { set: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'style').set },
+    // allow setting of styles through string or object
+    style: {
+        set: function (styles) {
+            if (typeof styles == "string") {
+                this.css = styles
+            } else {
+                Object.assign(this.style, styles)
+            }
+        }
+    },
+    // allow setting of children directly
+    children: {
+        set: function(newChilden) {
+            // remove all children
+            while (this.firstChild) {
+                this.removeChild(this.firstChild)
+            }
+            // add new child nodes
+            for (let each of newChilden) {
+                this.add(each)
+            }
+        },
+        get: function() {
+            return this.childNodes
+        }
+    },
+    class: {
+        set: function(newClass) {
+            this.className = newClass
+        },
+        get: function() {
+            return this.className
+        }
+    }
+})
 
 
 a = createElement({})
