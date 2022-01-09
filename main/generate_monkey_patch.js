@@ -1,6 +1,9 @@
 var deprecatedClasses = [ HTMLFrameSetElement, ]
-var specialCase = [ HTMLTextAreaElement, ] // attribute doesn't touch nodes, but has same attribute name as another html class, who's attribute does involve nodes
-var classesToChange = [ EventTarget, Node, NodeList, RadioNodeList, Element, Document, HTMLElement, HTMLDocument, HTMLCollection, HTMLAnchorElement, HTMLAreaElement, HTMLAudioElement, HTMLBRElement, HTMLBaseElement, HTMLBodyElement, HTMLButtonElement, HTMLCanvasElement, HTMLDListElement, HTMLDataElement, HTMLDataListElement, HTMLDialogElement, HTMLDivElement, HTMLEmbedElement, HTMLFieldSetElement, HTMLFormControlsCollection, HTMLFormElement, HTMLFrameSetElement, HTMLHRElement, HTMLHeadElement, HTMLHeadingElement, HTMLHtmlElement, HTMLIFrameElement, HTMLImageElement, HTMLInputElement, HTMLLIElement, HTMLLabelElement, HTMLLegendElement, HTMLLinkElement, HTMLMapElement, HTMLMediaElement, HTMLMetaElement, HTMLMeterElement, HTMLModElement, HTMLOListElement, HTMLObjectElement, HTMLOptGroupElement, HTMLOptionElement, HTMLOptionsCollection, HTMLOutputElement, HTMLParagraphElement, HTMLParamElement, HTMLPictureElement, HTMLPreElement, HTMLProgressElement, HTMLQuoteElement, HTMLScriptElement, HTMLSelectElement, HTMLSourceElement, HTMLSpanElement, HTMLStyleElement, HTMLTableCaptionElement, HTMLTableCellElement, HTMLTableColElement, HTMLTableElement, HTMLTableRowElement, HTMLTableSectionElement, HTMLTemplateElement, HTMLTimeElement, HTMLTitleElement, HTMLTrackElement, HTMLUListElement, HTMLUnknownElement, HTMLVideoElement, ]
+var specialCase = [
+    HTMLTextAreaElement, // attribute doesn't touch nodes, but has same attribute name as another html class, who's attribute does involve nodes
+    NodeList, // manually patched because of complicated methods
+]
+var classesToChange = [ EventTarget, Node, RadioNodeList, Element, Document, HTMLElement, HTMLDocument, HTMLCollection, HTMLAnchorElement, HTMLAreaElement, HTMLAudioElement, HTMLBRElement, HTMLBaseElement, HTMLBodyElement, HTMLButtonElement, HTMLCanvasElement, HTMLDListElement, HTMLDataElement, HTMLDataListElement, HTMLDialogElement, HTMLDivElement, HTMLEmbedElement, HTMLFieldSetElement, HTMLFormControlsCollection, HTMLFormElement, HTMLFrameSetElement, HTMLHRElement, HTMLHeadElement, HTMLHeadingElement, HTMLHtmlElement, HTMLIFrameElement, HTMLImageElement, HTMLInputElement, HTMLLIElement, HTMLLabelElement, HTMLLegendElement, HTMLLinkElement, HTMLMapElement, HTMLMediaElement, HTMLMetaElement, HTMLMeterElement, HTMLModElement, HTMLOListElement, HTMLObjectElement, HTMLOptGroupElement, HTMLOptionElement, HTMLOptionsCollection, HTMLOutputElement, HTMLParagraphElement, HTMLParamElement, HTMLPictureElement, HTMLPreElement, HTMLProgressElement, HTMLQuoteElement, HTMLScriptElement, HTMLSelectElement, HTMLSourceElement, HTMLSpanElement, HTMLStyleElement, HTMLTableCaptionElement, HTMLTableCellElement, HTMLTableColElement, HTMLTableElement, HTMLTableRowElement, HTMLTableSectionElement, HTMLTemplateElement, HTMLTimeElement, HTMLTitleElement, HTMLTrackElement, HTMLUListElement, HTMLUnknownElement, HTMLVideoElement, ]
 var propertiesToWrap = [
     // "cloneNode", <--special case
 
@@ -102,8 +105,19 @@ var hasAsSetter = (object, key)=>{
 }
 
 var compiledOutput = `
+    const proxySymbol = Symbol.for('Proxy')
     const elementSymbol = Symbol.for("element")
     const proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
+    const convertList = (listObj) => new Proxy(listObj, {
+        get(original, key) {
+            if (key == proxySymbol) {return true}
+            return maybeConvert(original[key])
+        },
+        set(original, key, value) {
+            if (key == proxySymbol) {return}
+            return original[key] = maybeConvert(value)
+        },
+    })
     const maybeConvert = (node)=> {
             if (node instanceof Object) {
                 if (node[elementSymbol]) {
@@ -113,8 +127,7 @@ var compiledOutput = `
                     return node[proxyCounterpartSymbol]
                 }
                 if (node.length) {
-                    // TODO: change this by hacking into NodeList and overriding all the properties, the .item() method, the .keys() method, the .values() method etc
-                    return [...node].map(maybeConvert)
+                    return convertList(node)
                 }
             }
             return node
@@ -160,91 +173,38 @@ for (const EachClass of classesToChange) {
         compiledOutput += `\n\n${beforeDefinition}Object.defineProperties(${EachClass.name}.prototype, {\n${propertyDefinitions}})`
     }
 }
-console.debug(compiledOutput)
 
+compiledOutput += `
 
-// 
-// 
-// patch HTMLCollection, HTMLOptionsCollection, NodeList
-// 
-// 
-var elementSymbol = Symbol.for("element")
-var proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
-var maybeConvert = (node)=> {
-        if (node instanceof Object) {
-            if (node[elementSymbol]) {
-                return node[elementSymbol]
-            }
-            if (node[proxyCounterpartSymbol]) {
-                return node[proxyCounterpartSymbol]
-            }
-            if (node.length) {
-                // TODO: change this by hacking into NodeList and overriding all the properties, the .item() method, the .keys() method, the .values() method etc
-                return [...node].map(maybeConvert)
-            }
-        }
-        return node
-    }
-var wrapMethodConverter = (original) => function (...args) { return maybeConvert(original.apply(this, args.map(maybeConvert))) }
-
+// manually patch NodeList cause it's special
+const [ nodeListEntriesFunction, nodeListForEachFunction, nodeListValuesFunction ] = [ NodeList.prototype.entries, NodeList.prototype.forEach, NodeList.prototype.values ]
 Object.defineProperties(NodeList.prototype, {
-    item: { value: wrapMethodConverter(NodeList.prototype.item), },
-})
-document.querySelectorAll("*").item(0)
-    entries: { value: },
-    forEach()
-    values()
-
-const proxySymbol = Symbol.for('Proxy')
-const thisProxySymbol = Symbol('thisProxy')
-
-const containerPatch = (whichContainerClass)=>{
-    const thisProxySymbol = Symbol(`proxyFor${whichContainerClass.name}`)
-    const originalHasInstance = whichContainerClass.prototype[Symbol.hasInstance]
-    whichContainerClass.prototype[Symbol.hasInstance] = (item, ...args)=>(item instanceof Object && item[thisProxySymbol])||originalHasInstance(item, ...args)
-    new Proxy(originalThing, {
-        defineProperty: Reflect.defineProperty,
-        getPrototypeOf: Reflect.getPrototypeOf,
-        // Object.keys
-        ownKeys(...args) { return Reflect.ownKeys(...args) },
-        // function call (original value needs to be a function)
-        apply(original, context, ...args) { console.log(args) },
-        // new operator (original value needs to be a class)
-        construct(...args) {},
-        get(original, key, ...args) {
-            if (key == proxySymbol||key == thisProxySymbol) {return true}
-            return Reflect.get(original, key, ...args)
-        },
-        set(original, key, ...args) {
-            if (key == proxySymbol||key == thisProxySymbol) {return}
-            return Reflect.set(original, key, ...args)
-        },
-    })
-}
-// originalThing[Symbol.iterator]
-// originalThing[Symbol.toPrimitive]
-// example of changing the instanceof operator:
-const originalHasInstance = Function.prototype[Symbol.hasInstance]
-Function.prototype[Symbol.hasInstance] = (item, ...args)=>(item instanceof Object && item[thisProxySymbol])||originalHasInstance(item, ...args)
-const proxyObject = new Proxy(originalThing, {
-    defineProperty: Reflect.defineProperty,
-    getPrototypeOf: Reflect.getPrototypeOf,
-    // Object.keys
-    ownKeys(...args) { return Reflect.ownKeys(...args) },
-    // function call (original value needs to be a function)
-    apply(original, context, ...args) { console.log(args) },
-    // new operator (original value needs to be a class)
-    construct(...args) {},
-    get(original, key, ...args) {
-        if (key == proxySymbol||key == thisProxySymbol) {return true}
-        return Reflect.get(original, key, ...args)
+    item: {
+        value: wrapMethodConverter(NodeList.prototype.item),
     },
-    set(original, key, ...args) {
-        if (key == proxySymbol||key == thisProxySymbol) {return}
-        return Reflect.set(original, key, ...args)
+    entries: {
+        value: function*(){
+            for (const [key, value] of nodeListEntriesFunction.apply(this)) {
+                yield [ key, maybeConvert(value) ]
+            }
+        },
+    },
+    forEach: {
+        value: function(callback, thisArg){
+            nodeListForEachFunction.call(
+                this,
+                (element, index, array)=>{ callback.apply(thisArg, [ maybeConvert(element), index, array ]) }
+            )
+        },
+    },
+    values: {
+        value: function*(){
+            for (const each of nodeListValuesFunction.apply(this)) {
+                yield maybeConvert(each)
+            }
+        },
     },
 })
-
-// FIXME: make sure the "this" context is passed correctly for any that need it
-// FIXME: options property of <select> returning a HTMLOptionsCollection
-// FIXME: make a hack to have the the NodeList be mutable
+NodeList.prototype[Symbol.iterator] = NodeList.prototype.values
+`
+console.debug(compiledOutput)
