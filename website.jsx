@@ -1887,7 +1887,7 @@ const thisProxySymbol = Symbol('customObject')
 const originalHasInstance = Custom.prototype[Symbol.hasInstance]
 Custom.prototype[Symbol.hasInstance] = (item, ...args)=>(item instanceof Object && item[thisProxySymbol])||originalHasInstance(item, ...args)
 
-const proxyObject = new Proxy(Custom, {
+const CustomProxy = new Proxy(Custom, {
     defineProperty: Reflect.defineProperty,
     getPrototypeOf: Reflect.getPrototypeOf,
     // Object.keys
@@ -1907,8 +1907,30 @@ const proxyObject = new Proxy(Custom, {
     },
 })
 
+const elementSymbol = Symbol.for("element")
+const createElement = ({ style, onConnect, onDisconnect, onAdopted, children, })=>{
+    const element = new Custom({onConnect, onDisconnect, onAdopted, children})
+    const elementProxy = new Proxy(element, {
+        defineProperty: Reflect.defineProperty,
+        getPrototypeOf: Reflect.getPrototypeOf,
+        // Object.keys
+        ownKeys(original) { return Object.keys(original) },
+        get(original, key) {
+            console.debug(`getting key:`,key)
+            if (key == proxySymbol||key == thisProxySymbol) {return true}
+            if (key == elementSymbol) {return original}
+            return original[key]
+        },
+        set(original, key, value) {
+            if (key == proxySymbol||key == thisProxySymbol) {return}
+            return original[key] = value
+        },
+    })
+    return elementProxy
+}
 
-a = new proxyObject({})
+
+a = createElement({})
 document.body.appendChild(a)
 a.innerHTML = "Howdy!"
 
