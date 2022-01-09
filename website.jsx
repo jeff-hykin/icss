@@ -1878,17 +1878,44 @@ class Custom extends HTMLElement {
 }
 customElements.define("custom-", Custom)
 
-// 
-// wrap with proxy object
-// 
-const proxySymbol = Symbol.for('Proxy')
-const thisProxySymbol = Symbol('customObject')
-// changing the instanceof operator:
-const originalHasInstance = Custom.prototype[Symbol.hasInstance]
-Custom.prototype[Symbol.hasInstance] = (item, ...args)=>(item instanceof Object && item[thisProxySymbol])||originalHasInstance(item, ...args)
+const proxySymbol            = Symbol.for('Proxy')
+const elementSymbol          = Symbol("element")
+const proxyCounterpartSymbol = Symbol("proxyCounterpart")
+const onCloneNodeSymbol      = Symbol("onCloneNode")
+const originalProxy = window.Proxy
+// make it so that proxys seemingly "just work" with Nodes
+window.Proxy = new originalProxy(originalProxy, {
+    construct(original, [target, handler], originalConstructor) {
+        // do nothing different if not a node
+        if (!(target instanceof Node)) {
+            return new originalProxy(target, handler)
+        }
+        // add a hook for checking if something is a proxy, cloneNode, and a way to access the element
+        const originalGet = handler.get || Reflect.get
+        if (handler.cloneNode instanceof Function) {
+            handler.get = function(target, key) {
+                if (key==proxySymbol) {return true}
+                if (key==elementSymbol) {return target}
+                if (key==onCloneNodeSymbol) { return (...args)=>handler.cloneNode.apply(target,args) }
+                return originalGet.call(this, target, key)
+            }
+        } else {
+            handler.get = function(target, key) {
+                if (key==proxySymbol) {return true}
+                if (key==elementSymbol) {return target}
+                return originalGet.call(this, target, key)
+            }
+        }
+        // create the proxy like normal
+        const normalProxyObject = new originalProxy(target, handler)
+        // bind it to the proxy
+        Object.defineProperty(target, proxyCounterpartSymbol, {
+            writable: false
+            value: normalProxyObject,
+        })
+    }
+})
 
-const elementSymbol = Symbol.for("element")
-const proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
 const createElement = ({ style, onConnect, onDisconnect, onAdopted, children, })=>{
     const element = new Custom({onConnect, onDisconnect, onAdopted, children})
     const elementProxy = new Proxy(element, {
@@ -1907,49 +1934,9 @@ const createElement = ({ style, onConnect, onDisconnect, onAdopted, children, })
             return original[key] = value
         },
     })
+    element[proxyCounterpartSymbol] = elementProxy
     return elementProxy
 }
-
-
-// expand the HTML element ability
-Object.defineProperties(window.Element.prototype, {
-    // setting styles through a string
-    css: { set: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'style').set },
-    // allow setting of styles through string or object
-    style: {
-        set: function (styles) {
-            if (typeof styles == "string") {
-                this.css = styles
-            } else {
-                Object.assign(this.style, styles)
-            }
-        }
-    },
-    // allow setting of children directly
-    children: {
-        set: function(newChilden) {
-            // remove all children
-            while (this.firstChild) {
-                this.removeChild(this.firstChild)
-            }
-            // add new child nodes
-            for (let each of newChilden) {
-                this.add(each)
-            }
-        },
-        get: function() {
-            return this.childNodes
-        }
-    },
-    class: {
-        set: function(newClass) {
-            this.className = newClass
-        },
-        get: function() {
-            return this.className
-        }
-    }
-})
 
 
 a = createElement({})

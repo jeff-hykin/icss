@@ -110,10 +110,44 @@ var hasAsSetter = (object, key)=>{
 }
 
 var compiledOutput = `
-const proxySymbol = Symbol.for('Proxy')
-const elementSymbol = Symbol.for("element")
-const proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
-const onCloneNodeSymbol = Symbol.for("onCloneNode")
+const proxySymbol            = Symbol.for('Proxy')
+const elementSymbol          = Symbol("element")
+const proxyCounterpartSymbol = Symbol("proxyCounterpart")
+const onCloneNodeSymbol      = Symbol("onCloneNode")
+const originalProxy = window.Proxy
+// make it so that proxys seemingly "just work" with Nodes
+window.Proxy = new originalProxy(originalProxy, {
+    construct(original, [target, handler], originalConstructor) {
+        // do nothing different if not a node
+        if (!(target instanceof Node)) {
+            return new originalProxy(target, handler)
+        }
+        // add a hook for checking if something is a proxy, cloneNode, and a way to access the element
+        const originalGet = handler.get || Reflect.get
+        if (handler.cloneNode instanceof Function) {
+            handler.get = function(target, key) {
+                if (key==proxySymbol) {return true}
+                if (key==elementSymbol) {return target}
+                if (key==onCloneNodeSymbol) { return (...args)=>handler.cloneNode.apply(target,args) }
+                return originalGet.call(this, target, key)
+            }
+        } else {
+            handler.get = function(target, key) {
+                if (key==proxySymbol) {return true}
+                if (key==elementSymbol) {return target}
+                return originalGet.call(this, target, key)
+            }
+        }
+        // create the proxy like normal
+        const normalProxyObject = new originalProxy(target, handler)
+        // bind it to the proxy
+        Object.defineProperty(target, proxyCounterpartSymbol, {
+            writable: false,
+            value: normalProxyObject,
+        })
+        return normalProxyObject
+    }
+})
 
 const convertList = (listObj) => new Proxy(listObj, {
     get(original, key) {
