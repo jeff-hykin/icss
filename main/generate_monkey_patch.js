@@ -4,6 +4,14 @@ var specialCase = [
     NodeList, // manually patched because of complicated methods
 ]
 var classesToChange = [ EventTarget, Node, RadioNodeList, Element, Document, HTMLElement, HTMLDocument, HTMLCollection, HTMLAnchorElement, HTMLAreaElement, HTMLAudioElement, HTMLBRElement, HTMLBaseElement, HTMLBodyElement, HTMLButtonElement, HTMLCanvasElement, HTMLDListElement, HTMLDataElement, HTMLDataListElement, HTMLDialogElement, HTMLDivElement, HTMLEmbedElement, HTMLFieldSetElement, HTMLFormControlsCollection, HTMLFormElement, HTMLFrameSetElement, HTMLHRElement, HTMLHeadElement, HTMLHeadingElement, HTMLHtmlElement, HTMLIFrameElement, HTMLImageElement, HTMLInputElement, HTMLLIElement, HTMLLabelElement, HTMLLegendElement, HTMLLinkElement, HTMLMapElement, HTMLMediaElement, HTMLMetaElement, HTMLMeterElement, HTMLModElement, HTMLOListElement, HTMLObjectElement, HTMLOptGroupElement, HTMLOptionElement, HTMLOptionsCollection, HTMLOutputElement, HTMLParagraphElement, HTMLParamElement, HTMLPictureElement, HTMLPreElement, HTMLProgressElement, HTMLQuoteElement, HTMLScriptElement, HTMLSelectElement, HTMLSourceElement, HTMLSpanElement, HTMLStyleElement, HTMLTableCaptionElement, HTMLTableCellElement, HTMLTableColElement, HTMLTableElement, HTMLTableRowElement, HTMLTableSectionElement, HTMLTemplateElement, HTMLTimeElement, HTMLTitleElement, HTMLTrackElement, HTMLUListElement, HTMLUnknownElement, HTMLVideoElement, ]
+var propertiesReturningLists = [
+    "childNodes",
+    "children",
+    "getElementsByClassName",
+    "getElementsByTagName",
+    "getElementsByTagNameNS",
+    "querySelectorAll",
+]
 var propertiesToWrap = [
     // "cloneNode", <--special case
 
@@ -19,7 +27,6 @@ var propertiesToWrap = [
     "compareDocumentPosition",
     "contains",
     "getRootNode",
-    "hasChildNodes",
     "insertBefore",
     "isEqualNode",
     "isSameNode",
@@ -73,7 +80,6 @@ var propertiesToWrap = [
     "webkitFullscreenElement",
     "rootElement",
     "firstElementChild",
-    "childElementCount",
     "activeElement",
     "pointerLockElement",
     "fullscreenElement",
@@ -132,9 +138,9 @@ var compiledOutput = `
             }
             return node
         }
-    const wrapMethodConverter = (original) => function (...args) { return maybeConvert(original.apply(this, args.map(maybeConvert))) }
-    const wrapGetterConverter = (original) => function (key) { return maybeConvert(original.apply(this, [key])) }
-    const wrapSetterConverter = (original) => function (key, value) { return original.apply(this, [key, maybeConvert(value)]) }
+    const wrapMethodConverter = (original) => function (   ...args) { return maybeConvert(original.apply(this, args.map(maybeConvert)    )) }
+    const wrapGetterConverter = (original) => function (key       ) { return maybeConvert(original.apply(this, [key                     ])) }
+    const wrapSetterConverter = (original) => function (key, value) { return              original.apply(this, [key, maybeConvert(value)])  }
 
     let runningPropertyDefinitions
 `
@@ -208,3 +214,5 @@ Object.defineProperties(NodeList.prototype, {
 NodeList.prototype[Symbol.iterator] = NodeList.prototype.values
 `
 console.debug(compiledOutput)
+
+// FIXME: cloneNode

@@ -1,6 +1,17 @@
 
+    const proxySymbol = Symbol.for('Proxy')
     const elementSymbol = Symbol.for("element")
     const proxyCounterpartSymbol = Symbol.for("proxyCounterpart")
+    const convertList = (listObj) => new Proxy(listObj, {
+        get(original, key) {
+            if (key == proxySymbol) {return true}
+            return maybeConvert(original[key])
+        },
+        set(original, key, value) {
+            if (key == proxySymbol) {return}
+            return original[key] = maybeConvert(value)
+        },
+    })
     const maybeConvert = (node)=> {
             if (node instanceof Object) {
                 if (node[elementSymbol]) {
@@ -10,15 +21,14 @@
                     return node[proxyCounterpartSymbol]
                 }
                 if (node.length) {
-                    // TODO: change this by hacking into NodeList and overriding all the properties, the .item() method, the .keys() method, the .values() method etc
-                    return [...node].map(maybeConvert)
+                    return convertList(node)
                 }
             }
             return node
         }
-    const wrapMethodConverter = (original) => function (...args) { return maybeConvert(original.apply(this, args.map(maybeConvert))) }
-    const wrapGetterConverter = (original) => function (key) { return maybeConvert(original.apply(this, [key])) }
-    const wrapSetterConverter = (original) => function (key, value) { return original.apply(this, [key, maybeConvert(value)]) }
+    const wrapMethodConverter = (original) => function (   ...args) { return maybeConvert(original.apply(this, args.map(maybeConvert)    )) }
+    const wrapGetterConverter = (original) => function (key       ) { return maybeConvert(original.apply(this, [key                     ])) }
+    const wrapSetterConverter = (original) => function (key, value) { return              original.apply(this, [key, maybeConvert(value)])  }
 
     let runningPropertyDefinitions
 
@@ -37,16 +47,11 @@ Object.defineProperties(Node.prototype, {
     compareDocumentPosition: { value: wrapMethodConverter(Node.prototype.compareDocumentPosition), },
     contains: { value: wrapMethodConverter(Node.prototype.contains), },
     getRootNode: { value: wrapMethodConverter(Node.prototype.getRootNode), },
-    hasChildNodes: { value: wrapMethodConverter(Node.prototype.hasChildNodes), },
     insertBefore: { value: wrapMethodConverter(Node.prototype.insertBefore), },
     isEqualNode: { value: wrapMethodConverter(Node.prototype.isEqualNode), },
     isSameNode: { value: wrapMethodConverter(Node.prototype.isSameNode), },
     removeChild: { value: wrapMethodConverter(Node.prototype.removeChild), },
     replaceChild: { value: wrapMethodConverter(Node.prototype.replaceChild), },
-})
-
-Object.defineProperties(NodeList.prototype, {
-    item: { value: wrapMethodConverter(NodeList.prototype.item), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(Element.prototype)
@@ -74,7 +79,6 @@ Object.defineProperties(Element.prototype, {
     replaceWith: { value: wrapMethodConverter(Element.prototype.replaceWith), },
     shadowRoot: { get: wrapGetterConverter(runningPropertyDefinitions.shadowRoot.get), },
     firstElementChild: { get: wrapGetterConverter(runningPropertyDefinitions.firstElementChild.get), },
-    childElementCount: { get: wrapGetterConverter(runningPropertyDefinitions.childElementCount.get), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(Document.prototype)
@@ -98,7 +102,6 @@ Object.defineProperties(Document.prototype, {
     webkitFullscreenElement: { get: wrapGetterConverter(runningPropertyDefinitions.webkitFullscreenElement.get), },
     rootElement: { get: wrapGetterConverter(runningPropertyDefinitions.rootElement.get), },
     firstElementChild: { get: wrapGetterConverter(runningPropertyDefinitions.firstElementChild.get), },
-    childElementCount: { get: wrapGetterConverter(runningPropertyDefinitions.childElementCount.get), },
     activeElement: { get: wrapGetterConverter(runningPropertyDefinitions.activeElement.get), },
     pointerLockElement: { get: wrapGetterConverter(runningPropertyDefinitions.pointerLockElement.get), },
     fullscreenElement: { get: wrapGetterConverter(runningPropertyDefinitions.fullscreenElement.get), },
@@ -195,3 +198,34 @@ runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLTemplateElemen
 Object.defineProperties(HTMLTemplateElement.prototype, {
     shadowRoot: { get: wrapGetterConverter(runningPropertyDefinitions.shadowRoot.get), },
 })
+
+// manually patch NodeList cause it's special
+const [ nodeListEntriesFunction, nodeListForEachFunction, nodeListValuesFunction ] = [ NodeList.prototype.entries, NodeList.prototype.forEach, NodeList.prototype.values ]
+Object.defineProperties(NodeList.prototype, {
+    item: {
+        value: wrapMethodConverter(NodeList.prototype.item),
+    },
+    entries: {
+        value: function*(){
+            for (const [key, value] of nodeListEntriesFunction.apply(this)) {
+                yield [ key, maybeConvert(value) ]
+            }
+        },
+    },
+    forEach: {
+        value: function(callback, thisArg){
+            nodeListForEachFunction.call(
+                this,
+                (element, index, array)=>{ callback.apply(thisArg, [ maybeConvert(element), index, array ]) }
+            )
+        },
+    },
+    values: {
+        value: function*(){
+            for (const each of nodeListValuesFunction.apply(this)) {
+                yield maybeConvert(each)
+            }
+        },
+    },
+})
+NodeList.prototype[Symbol.iterator] = NodeList.prototype.values
