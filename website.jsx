@@ -695,7 +695,7 @@ if (!window[customElementStyleBandageSymbol]) {
         transform-style: preserve-3d !important;
         font: 16px sans-serif !important;
     `
-    window[customElementStyleBandageSymbol] = hash(baselineAttributes)
+    window[customElementStyleBandageSymbol] = "custom-"+hash(baselineAttributes)
     // add this as a CSS id rule
     styleElement.innerHTML = `
         #${window[customElementStyleBandageSymbol]} { ${baselineAttributes} }
@@ -1809,38 +1809,17 @@ baselineStyleElement.innerHTML = `
 // setup isolator
 // 
 class Custom extends HTMLElement {
-    constructor({ onConnect, onDisconnect, advanced, children=[] }) {
+    constructor({ onConnect, onDisconnect, onAdopted, children=[] }) {
         super()
-        
-        // 
-        // lock some attributes
-        // 
-        this.untouchables = []
-        Object.defineProperty(this, "setAttribute", {
-            value: (qualifiedName, value)=>{
-                if (!this.untouchables.includes(qualifiedName)) {
-                    super.setAttribute(qualifiedName, value)
-                }
-            },
-            writable: false
-        })
-        
-        // 
-        // lock external styles
-        // 
-        this.untouchables.push("id")
-        this.setAttribute("id", window[customElementStyleBandageSymbol])
-        Object.defineProperty(this, "id", {
-            value: null,
-            writable: false
-        })
-        
-        // 
-        // baseline internal styles
-        // 
         const shadowRoot = this.attachShadow({mode: 'open'})
-        // use div as a container for all the style elements
+        
+        // external styles
+        this.setAttribute("id", window[customElementStyleBandageSymbol])
+        
+        // baseline internal styles
         shadowRoot.appendChild(baselineStyleElement.cloneNode(true))
+
+        // root container
         this.rootElement = document.createElement("div")
         this.rootElement.setAttribute("id", `this`)
         this.rootElement.setAttribute("style", `height: 100% !important; width: 100% !important;`)
@@ -1891,10 +1870,7 @@ class Custom extends HTMLElement {
         })
         this.connectedCallback    = onConnect
         this.disconnectedCallback = onDisconnect
-        this.adoptedCallback      = advanced.adoptedCallback
-        
-        // lock these
-        Object.freeze(this.untouchables)
+        this.adoptedCallback      = onAdopted
     }
     static get observedAttributes() {
         return []
@@ -1902,6 +1878,47 @@ class Custom extends HTMLElement {
 }
 customElements.define("custom-", Custom)
 
+// 
+// wrap with proxy object
+// 
+const proxySymbol = Symbol.for('Proxy')
+const thisProxySymbol = Symbol('customObject')
+// changing the instanceof operator:
+const originalHasInstance = Custom.prototype[Symbol.hasInstance]
+Custom.prototype[Symbol.hasInstance] = (item, ...args)=>(item instanceof Object && item[thisProxySymbol])||originalHasInstance(item, ...args)
+
+const proxyObject = new Proxy(Custom, {
+    defineProperty: Reflect.defineProperty,
+    getPrototypeOf: Reflect.getPrototypeOf,
+    // Object.keys
+    ownKeys(original) { return Object.keys(original) },
+    // function call (original value needs to be a function)
+    apply(original, context, ...args) { return new original(...args) },
+    // new operator (original value needs to be a class)
+    construct(original, ...args) { return new original(...args)  },
+    get(original, key, ...args) {
+        console.debug(`getting key:`,key)
+        if (key == proxySymbol||key == thisProxySymbol) {return true}
+        return Reflect.get(original, key, ...args)
+    },
+    set(original, key, ...args) {
+        if (key == proxySymbol||key == thisProxySymbol) {return}
+        return Reflect.set(original, key, ...args)
+    },
+})
+
+
+a = new proxyObject({})
+document.body.appendChild(a)
+a.innerHTML = "Howdy!"
+
+const createFactory = (...mixins)=>{
+    
+}
+
+
+// TODO:
+    // handle async children
 
 // 
 // 
