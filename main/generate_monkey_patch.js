@@ -11,6 +11,16 @@ var propertiesReturningLists = [
     "getElementsByTagName",
     "getElementsByTagNameNS",
     "querySelectorAll",
+    "elementsFromPoint", // the only one that returns an array
+    "getElementsByClassName",
+    "getElementsByTagName",
+    "getElementsByTagNameNS",
+    "getElementsByName",
+    "labels",
+    "options",
+    "elements",
+    "rows",
+    "tBodies",
 ]
 var propertiesToWrap = [
     // "cloneNode", <--special case
@@ -67,6 +77,10 @@ var propertiesToWrap = [
     "tFoot",
     "tHead",
     "caption",
+    "form",
+    "menu",
+    "labels",
+    "options",
     "cells",
     "item",
     "namedItem",
@@ -84,10 +98,6 @@ var propertiesToWrap = [
     "pointerLockElement",
     "fullscreenElement",
     "adoptNode",
-    "createElement",
-    "createElementNS",
-    "createNodeIterator",
-    "createTextNode",
     "elementFromPoint",
     "elementsFromPoint",
     "getElementById",
@@ -132,7 +142,7 @@ var compiledOutput = `
                 if (node[proxyCounterpartSymbol]) {
                     return node[proxyCounterpartSymbol]
                 }
-                if (node.length) {
+                if (node.length!=null) {
                     return convertList(node)
                 }
             }

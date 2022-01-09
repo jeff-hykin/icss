@@ -20,7 +20,7 @@
                 if (node[proxyCounterpartSymbol]) {
                     return node[proxyCounterpartSymbol]
                 }
-                if (node.length) {
+                if (node.length!=null) {
                     return convertList(node)
                 }
             }
@@ -106,10 +106,6 @@ Object.defineProperties(Document.prototype, {
     pointerLockElement: { get: wrapGetterConverter(runningPropertyDefinitions.pointerLockElement.get), },
     fullscreenElement: { get: wrapGetterConverter(runningPropertyDefinitions.fullscreenElement.get), },
     adoptNode: { value: wrapMethodConverter(Document.prototype.adoptNode), },
-    createElement: { value: wrapMethodConverter(Document.prototype.createElement), },
-    createElementNS: { value: wrapMethodConverter(Document.prototype.createElementNS), },
-    createNodeIterator: { value: wrapMethodConverter(Document.prototype.createNodeIterator), },
-    createTextNode: { value: wrapMethodConverter(Document.prototype.createTextNode), },
     elementFromPoint: { value: wrapMethodConverter(Document.prototype.elementFromPoint), },
     elementsFromPoint: { value: wrapMethodConverter(Document.prototype.elementsFromPoint), },
     getElementById: { value: wrapMethodConverter(Document.prototype.getElementById), },
@@ -124,6 +120,17 @@ Object.defineProperties(HTMLCollection.prototype, {
     namedItem: { value: wrapMethodConverter(HTMLCollection.prototype.namedItem), },
 })
 
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLButtonElement.prototype)
+Object.defineProperties(HTMLButtonElement.prototype, {
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
+    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+})
+
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLDataListElement.prototype)
+Object.defineProperties(HTMLDataListElement.prototype, {
+    options: { get: wrapGetterConverter(runningPropertyDefinitions.options.get), },
+})
+
 Object.defineProperties(HTMLEmbedElement.prototype, {
     getSVGDocument: { value: wrapMethodConverter(HTMLEmbedElement.prototype.getSVGDocument), },
 })
@@ -131,6 +138,7 @@ Object.defineProperties(HTMLEmbedElement.prototype, {
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLFieldSetElement.prototype)
 Object.defineProperties(HTMLFieldSetElement.prototype, {
     elements: { get: wrapGetterConverter(runningPropertyDefinitions.elements.get), },
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
 })
 
 Object.defineProperties(HTMLFormControlsCollection.prototype, {
@@ -151,8 +159,36 @@ Object.defineProperties(HTMLIFrameElement.prototype, {
     getSVGDocument: { value: wrapMethodConverter(HTMLIFrameElement.prototype.getSVGDocument), },
 })
 
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLInputElement.prototype)
+Object.defineProperties(HTMLInputElement.prototype, {
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
+    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+})
+
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLLabelElement.prototype)
+Object.defineProperties(HTMLLabelElement.prototype, {
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
+})
+
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLLegendElement.prototype)
+Object.defineProperties(HTMLLegendElement.prototype, {
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
+})
+
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLMeterElement.prototype)
+Object.defineProperties(HTMLMeterElement.prototype, {
+    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+})
+
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLObjectElement.prototype)
 Object.defineProperties(HTMLObjectElement.prototype, {
     getSVGDocument: { value: wrapMethodConverter(HTMLObjectElement.prototype.getSVGDocument), },
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
+})
+
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLOptionElement.prototype)
+Object.defineProperties(HTMLOptionElement.prototype, {
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
 })
 
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLOptionsCollection.prototype)
@@ -162,12 +198,26 @@ Object.defineProperties(HTMLOptionsCollection.prototype, {
     selectedIndex: { get: wrapGetterConverter(runningPropertyDefinitions.selectedIndex.get), },
 })
 
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLOutputElement.prototype)
+Object.defineProperties(HTMLOutputElement.prototype, {
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
+    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+})
+
+runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLProgressElement.prototype)
+Object.defineProperties(HTMLProgressElement.prototype, {
+    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+})
+
 runningPropertyDefinitions = Object.getOwnPropertyDescriptors(HTMLSelectElement.prototype)
 Object.defineProperties(HTMLSelectElement.prototype, {
     add: { value: wrapMethodConverter(HTMLSelectElement.prototype.add), },
     remove: { value: wrapMethodConverter(HTMLSelectElement.prototype.remove), },
     selectedIndex: { get: wrapGetterConverter(runningPropertyDefinitions.selectedIndex.get), },
     selectedOptions: { get: wrapGetterConverter(runningPropertyDefinitions.selectedOptions.get), },
+    form: { get: wrapGetterConverter(runningPropertyDefinitions.form.get), },
+    labels: { get: wrapGetterConverter(runningPropertyDefinitions.labels.get), },
+    options: { get: wrapGetterConverter(runningPropertyDefinitions.options.get), },
     item: { value: wrapMethodConverter(HTMLSelectElement.prototype.item), },
     namedItem: { value: wrapMethodConverter(HTMLSelectElement.prototype.namedItem), },
 })
