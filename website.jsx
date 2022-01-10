@@ -17,14 +17,83 @@ document.body.innerHTML = `
 
 
 // TODO:
-    // standardize external styles
-    // standardize internal styles
-    // wrap in proxy object
+    // update CustomElement
+        // have a default style getter/setter
+        // have a default children getter/setter
+    // standardize the "elementFunction"
+        // args:
+        //     style
+        //     children
+        //     ...etc (any of the existing HTML properties)
+    // create the barebones container
+        // a function acccepting the standard args
+        // uses getters/setters to know when styles are changed and update internal vs external styles accordingly
+            // decide:
+            // - what can be externally influenced by style sheets
+            // - what can be externally influenced by element.style.thing = blah
+            // - what is internally influenced by element.style.thing = blah
+            // maybe Fix external/internal sizing issue by using another custom component that watched for attribute changes in either
+        // uses getters/setters for changes to children
+        // create a list of caveats because of stuff like display: none
+            // :host is default external style, which can be overridden by outside world
+            // #this is the shadow dom container, which you have total control over for animation and such
+                // height, width, and positioning are only going to work on the parent
+    // create a singleton component function
+        // 
+    // create the createElementFactory
+        // this is a function
+        // it returns a function that accepts the standard args
+        // before returning it runs all the $whenever.$factoryIsBuilt callbacks with the function as an argument
+        // mixes all the mixins together, using $namespace if needed
+        // extracts all $-names
+        // extracts anything labelled as a class prop
+        // creates a default properties object looking at the default values for what remains
+        //     PROBLEM: default values refering to the same object (need Vue-like solution of a function that returns copies or not)
+        // that returned-function internally:
+        // - creates the custom element
+        //     - attaches the $attached and $detached to onConnect, onDisconnect, and onAdopted
+        // - assigns all custom element's properties to be duplicates of given default values
+        // - all the callbacks will have `this` = customElement, and this.$fromTheOutside = theProxy
+        // - wraps the custom element in a proxy object
+        //     - creates setters that
+        //        - check if data is private or non-reactive
+        //        - calls validator
+        //        - calls $whenever.$attemptPropUpdate
+        //        - calls $whenever.$propChanged depending on some conditions
+        //        - if Object and not non-reactive, wrap it in a Proxy watcher with an update/change callback
+        //        - if already reactive, then check that the listener is already installed on it
+        //        - allow for reactive primitives by checking for a Symbol.for("Primitive") key
+        // - calls $skeletonCreated
+        // - calls $batchUpdating with all arguments
+        //     - arguments are first checked if their property should reactive or not, then makes them reactive if needed, and attaches listeners if they're already reactive
+        //     - if it exists it calls it
+        //     - for any key-value args not returned by the $batchUpdating, they are indivually assigned to the proxy object (to trigger an update/validation), and checks the reactive-ness of args even if they are returned
+        // how it should look:
+            // - $namespace (err if same as any other mixins)
+            // - $once
+            //     - $factoryIsBuilt
+            //     - $skeletonCreated
+            // - $whenever
+            //     - $batchUpdating
+            //     - $propUpdating
+            //     - $propChanged
+            //     - $attached
+            //     - $detached
+            //  - [propName]:
+            //     - default value or
+            //     - custom object with symbol
+            //         - defaultValue
+            //         - hierarchical/inheritable
+            //         - private
+            //         - singleton/isClassProp
+            //         - disable reactivity/tracking
+            //         - validator
+            //         - explanation/help
+            //         - isEvent
+            //         - onUpdate
+            //         - onChange
+    
 
-// style explaination
-    // :host is default external style, which can be overridden by outside world
-    // #this is the shadow dom container, which you have total control over for animation and such
-        // height, width, and positioning are only going to work on the parent
 
 // 
 // setup external bandage
@@ -1877,6 +1946,20 @@ class Custom extends HTMLElement {
     }
 }
 customElements.define("custom-", Custom)
+
+
+
+const createElement = ({ style, children, events, ...props, })=>{
+    const element = new CustomElement({
+        onConnect: events.onConnect,
+        onDisconnect: events.onDisconnect,
+        onAdopted: events.onAdopted,
+        children,
+    })
+    Object.assign(element.style, style)
+    Object.assign(element, props)
+    return element
+}
 
 const proxySymbol            = Symbol.for('Proxy')
 const elementSymbol          = Symbol("element")
